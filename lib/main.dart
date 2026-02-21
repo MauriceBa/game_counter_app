@@ -3,17 +3,17 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
-import 'package:just_audio/just_audio.dart';
+import 'package:just_audio/just_audio.dart' as ja;
 import 'package:just_audio_background/just_audio_background.dart';
 
 // ==========================================
 // Radio Player Setup
 // ==========================================
-final AudioPlayer radioPlayer = AudioPlayer();
+final ja.AudioPlayer radioPlayer = ja.AudioPlayer();
 
 Future<void> initRadioPlayer() async {
   try {
-    await radioPlayer.setAudioSource(AudioSource.uri(
+    await radioPlayer.setAudioSource(ja.AudioSource.uri(
       Uri.parse('https://hosting2.studioradiomedia.com:8029/stream.mp3'), // Stream URL for R' Tignes
       tag: MediaItem(
         id: 'tignes_live',
@@ -123,14 +123,14 @@ class GlobalRadioPlayer extends StatelessWidget {
                 ],
               ),
             ),
-            StreamBuilder<dynamic>(
+            StreamBuilder<ja.PlayerState>(
               stream: radioPlayer.playerStateStream,
               builder: (context, snapshot) {
-                final playerState = snapshot.data as dynamic?;
+                final playerState = snapshot.data;
                 final processingState = playerState?.processingState;
                 final playing = playerState?.playing;
                 
-                if (processingState == ProcessingState.loading || processingState == ProcessingState.buffering) {
+                if (processingState == ja.ProcessingState.loading || processingState == ja.ProcessingState.buffering) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: SizedBox(width: 32, height: 32, child: CircularProgressIndicator()),
