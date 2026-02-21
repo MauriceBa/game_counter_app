@@ -3,8 +3,42 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
+import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
-void main() {
+// ==========================================
+// Radio Player Setup
+// ==========================================
+final AudioPlayer radioPlayer = AudioPlayer();
+
+Future<void> initRadioPlayer() async {
+  try {
+    await radioPlayer.setAudioSource(AudioSource.uri(
+      Uri.parse('https://hosting2.studioradiomedia.com:8029/stream.mp3'), // Stream URL for R' Tignes
+      tag: MediaItem(
+        id: 'tignes_live',
+        album: 'R\' La Radiostation',
+        title: 'Live Tignes',
+        artUri: Uri.parse('https://laradiostation.fr/wp-content/uploads/2021/09/Logo-R-La-Radiostation.png'),
+      ),
+    ));
+  } catch (e) {
+    debugPrint("Fehler beim Laden des Radio-Streams: $e");
+  }
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize background audio execution for lock screen widget
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'Radio Tignes Playback',
+    androidNotificationOngoing: true,
+  );
+  
+  await initRadioPlayer();
+  
   runApp(const GameCounterApp());
 }
 
@@ -31,12 +65,94 @@ class GameCounterApp extends StatelessWidget {
         cardTheme: CardTheme(elevation: 2, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
       ),
       themeMode: ThemeMode.system,
+      builder: (context, child) {
+        // Wrap everything in a scaffold to provide a persistent bottom radio player
+        return Scaffold(
+          body: child,
+          bottomNavigationBar: const GlobalRadioPlayer(),
+        );
+      },
       initialRoute: '/',
       routes: {
         '/': (context) => const GameSelectionScreen(),
         '/setup': (context) => const PlayerSetupScreen(),
         '/history': (context) => const HistoryScreen(),
       },
+    );
+  }
+}
+
+// ==========================================
+// Global Radio Player Widget
+// ==========================================
+class GlobalRadioPlayer extends StatelessWidget {
+  const GlobalRadioPlayer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+                ],
+                image: const DecorationImage(
+                  image: NetworkImage('https://laradiostation.fr/wp-content/uploads/2021/09/Logo-R-La-Radiostation.png'),
+                  fit: BoxFit.contain,
+                )
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('R\' Tignes Live', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text('La Radiostation', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
+            StreamBuilder<PlayerState>(
+              stream: radioPlayer.playerStateStream,
+              builder: (context, snapshot) {
+                final playerState = snapshot.data;
+                final processingState = playerState?.processingState;
+                final playing = playerState?.playing;
+                
+                if (processingState == ProcessingState.loading || processingState == ProcessingState.buffering) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: SizedBox(width: 32, height: 32, child: CircularProgressIndicator()),
+                  );
+                } else if (playing != true) {
+                  return IconButton(
+                    icon: const Icon(Icons.play_circle_fill, size: 40),
+                    color: Theme.of(context).colorScheme.primary,
+                    onPressed: radioPlayer.play,
+                  );
+                } else {
+                  return IconButton(
+                    icon: const Icon(Icons.pause_circle_filled, size: 40),
+                    color: Theme.of(context).colorScheme.primary,
+                    onPressed: radioPlayer.pause,
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -305,7 +421,6 @@ class _PlayerSetupScreenState extends State<PlayerSetupScreen> {
       return;
     }
 
-    // Replace setup screen with active game screen
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -463,7 +578,6 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
   }
 
   void _endGame() async {
-    // Show a dialog to confirm ending and saving
     final notesController = TextEditingController();
     final save = await showDialog<bool>(
       context: context,
@@ -501,7 +615,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
       );
       await DatabaseHelper().insertSession(session.toMap());
       if (mounted) {
-        Navigator.pop(context); // Go back to Home
+        Navigator.pop(context); 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${widget.gameTitle} gespeichert! 🏆')));
       }
     }
@@ -550,7 +664,6 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
             },
           );
         } else {
-          // Standard / Uno / Rummikub
           return StandardRoundDialog(
             players: players,
             themeColor: widget.themeColor,
@@ -572,10 +685,6 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Sort players for display depending on game logic
-    // Phase 10: highest phase first, then lowest score
-    // Uno/Rummikub: lowest score first
-    // Wizard: highest score first
     List<PlayerState> displayPlayers = List.from(players);
     displayPlayers.sort((a, b) {
       if (widget.gameType == 'phase10') {
@@ -584,7 +693,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
       } else if (widget.gameType == 'wizard') {
         return b.score.compareTo(a.score);
       } else {
-        return a.score.compareTo(b.score); // standard: lowest points = best
+        return a.score.compareTo(b.score); 
       }
     });
 
