@@ -123,10 +123,10 @@ class GlobalRadioPlayer extends StatelessWidget {
                 ],
               ),
             ),
-            StreamBuilder<dynamic>(
+            StreamBuilder<PlayerState>(
               stream: radioPlayer.playerStateStream,
               builder: (context, snapshot) {
-                final playerState = snapshot.data as dynamic?;
+                final playerState = snapshot.data;
                 final processingState = playerState?.processingState;
                 final playing = playerState?.playing;
                 
@@ -176,12 +176,12 @@ const List<String> phase10Rules = [
 // ==========================================
 // Models & Datenbank
 // ==========================================
-class GamePlayer {
+class PlayerState {
   String name;
   int score;
   int phase; // Speziell für Phase 10 (1-10)
 
-  GamePlayer({required this.name, this.score = 0, this.phase = 1});
+  PlayerState({required this.name, this.score = 0, this.phase = 1});
 
   Map<String, dynamic> toJson() => {
         'name': name,
@@ -189,7 +189,7 @@ class GamePlayer {
         'phase': phase,
       };
 
-  factory GamePlayer.fromJson(Map<String, dynamic> json) => GamePlayer(
+  factory PlayerState.fromJson(Map<String, dynamic> json) => PlayerState(
         name: json['name'],
         score: json['score'] ?? 0,
         phase: json['phase'] ?? 1,
@@ -200,7 +200,7 @@ class GameSession {
   final int? id;
   final String gameType;
   final DateTime date;
-  final List<GamePlayer> players;
+  final List<PlayerState> players;
   final String? notes;
 
   GameSession({
@@ -228,7 +228,7 @@ class GameSession {
       id: map['id'],
       gameType: map['game_type'],
       date: DateTime.parse(map['date']),
-      players: playersList.map((e) => GamePlayer.fromJson(Map<String, dynamic>.from(e))).toList(),
+      players: playersList.map((e) => PlayerState.fromJson(Map<String, dynamic>.from(e))).toList(),
       notes: map['notes'],
     );
   }
@@ -531,13 +531,13 @@ class ActiveGameScreen extends StatefulWidget {
 }
 
 class _ActiveGameScreenState extends State<ActiveGameScreen> {
-  late List<GamePlayer> players;
+  late List<PlayerState> players;
   int currentRound = 1;
 
   @override
   void initState() {
     super.initState();
-    players = widget.playerNames.map((name) => GamePlayer(name: name)).toList();
+    players = widget.playerNames.map((name) => PlayerState(name: name)).toList();
   }
 
   void _showPhase10Rules() {
@@ -685,7 +685,7 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<GamePlayer> displayPlayers = List.from(players);
+    List<PlayerState> displayPlayers = List.from(players);
     displayPlayers.sort((a, b) {
       if (widget.gameType == 'phase10') {
         if (b.phase != a.phase) return b.phase.compareTo(a.phase);
@@ -797,7 +797,7 @@ class Phase10RoundResult {
 }
 
 class Phase10RoundDialog extends StatefulWidget {
-  final List<GamePlayer> players;
+  final List<PlayerState> players;
   final Color themeColor;
   final Function(List<Phase10RoundResult>) onSave;
 
@@ -900,7 +900,7 @@ class WizardRoundResult {
 }
 
 class WizardRoundDialog extends StatefulWidget {
-  final List<GamePlayer> players;
+  final List<PlayerState> players;
   final Color themeColor;
   final int currentRound;
   final Function(List<WizardRoundResult>) onSave;
@@ -1017,7 +1017,7 @@ class _WizardRoundDialogState extends State<WizardRoundDialog> {
 // Dialog: Standard (Uno, Rummikub)
 // ==========================================
 class StandardRoundDialog extends StatefulWidget {
-  final List<GamePlayer> players;
+  final List<PlayerState> players;
   final Color themeColor;
   final int currentRound;
   final String gameType;
