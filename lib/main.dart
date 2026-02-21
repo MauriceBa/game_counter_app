@@ -123,10 +123,10 @@ class GlobalRadioPlayer extends StatelessWidget {
                 ],
               ),
             ),
-            StreamBuilder<ja.PlayerState>(
+            StreamBuilder<dynamic>(
               stream: radioPlayer.playerStateStream,
               builder: (context, snapshot) {
-                final playerState = snapshot.data;
+                final playerState = snapshot.data as ja.PlayerState?;
                 final processingState = playerState?.processingState;
                 final playing = playerState?.playing;
                 
