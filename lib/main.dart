@@ -48,7 +48,7 @@ class GameCounterApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Brettspiel Zähler',
+      title: 'MauriceAPP',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo, brightness: Brightness.light),
@@ -302,7 +302,7 @@ class GameSelectionScreen extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: const Text('Brettspiel Zähler', style: TextStyle(fontWeight: FontWeight.w800)),
+            title: const Text('MauriceAPP', style: TextStyle(fontWeight: FontWeight.w800)),
             actions: [
               IconButton(
                 icon: const Icon(Icons.history),
