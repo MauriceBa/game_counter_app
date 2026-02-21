@@ -14,7 +14,7 @@ final ja.AudioPlayer radioPlayer = ja.AudioPlayer();
 Future<void> initRadioPlayer() async {
   try {
     await radioPlayer.setAudioSource(ja.AudioSource.uri(
-      Uri.parse('https://hosting2.studioradiomedia.com:8029/stream.mp3'), // Stream URL for R' Tignes
+      Uri.parse('http://hosting2.studioradiomedia.com:8029/stream.mp3'), // Stream URL for R' Tignes
       tag: MediaItem(
         id: 'tignes_live',
         album: 'R\' La Radiostation',
@@ -38,6 +38,7 @@ Future<void> main() async {
   );
   
   await initRadioPlayer();
+  await radioPlayer.play();
   
   runApp(const GameCounterApp());
 }
@@ -123,19 +124,29 @@ class GlobalRadioPlayer extends StatelessWidget {
                 ],
               ),
             ),
-            StreamBuilder<dynamic>(
+            StreamBuilder<ja.PlayerState>(
               stream: radioPlayer.playerStateStream,
               builder: (context, snapshot) {
-                final playerState = snapshot.data as ja.PlayerState?;
+                final playerState = snapshot.data;
                 final processingState = playerState?.processingState;
-                final playing = playerState?.playing;
+                final playing = playerState?.playing ?? false;
                 
                 if (processingState == ja.ProcessingState.loading || processingState == ja.ProcessingState.buffering) {
                   return const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: SizedBox(width: 32, height: 32, child: CircularProgressIndicator()),
                   );
-                } else if (playing != true) {
+                } else if (processingState == ja.ProcessingState.idle || processingState == ja.ProcessingState.completed) {
+                  return IconButton(
+                    icon: const Icon(Icons.refresh, size: 36),
+                    tooltip: 'Neu verbinden',
+                    color: Theme.of(context).colorScheme.primary,
+                    onPressed: () async {
+                      await initRadioPlayer();
+                      radioPlayer.play();
+                    },
+                  );
+                } else if (!playing) {
                   return IconButton(
                     icon: const Icon(Icons.play_circle_fill, size: 40),
                     color: Theme.of(context).colorScheme.primary,
