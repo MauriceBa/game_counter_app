@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:label="game_counter_app"
+        android:label="MauriceAPP"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         
