@@ -1273,7 +1273,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 }
 
 // ==========================================
-// Dialog: Kniffel
+// Dialog: Kniffel - Visuelles Grid
 // ==========================================
 class KniffelRoundDialog extends StatefulWidget {
   final List<GamePlayer> players;
@@ -1287,12 +1287,24 @@ class KniffelRoundDialog extends StatefulWidget {
 }
 
 class _KniffelRoundDialogState extends State<KniffelRoundDialog> {
-  // Upper section categories
-  final List<String> upperCategories = ['Einser', 'Zweier', 'Dreier', 'Vierer', 'Fünfer', 'Sechser'];
-  // Lower section categories  
-  final List<String> lowerCategories = ['Dreierpasch', 'Viererpasch', 'Full House', 'Kl. Straße', 'Gr. Straße', 'Kniffel', 'Chance'];
+  // Kategorien mit Symbolen
+  final List<Map<String, dynamic>> categories = [
+    {'key': 'Einser', 'symbol': '⚀', 'desc': 'Nur Einser', 'max': 5},
+    {'key': 'Zweier', 'symbol': '⚁', 'desc': 'Nur Zweier', 'max': 10},
+    {'key': 'Dreier', 'symbol': '⚂', 'desc': 'Nur Dreier', 'max': 15},
+    {'key': 'Vierer', 'symbol': '⚃', 'desc': 'Nur Vierer', 'max': 20},
+    {'key': 'Fünfer', 'symbol': '⚄', 'desc': 'Nur Fünfer', 'max': 25},
+    {'key': 'Sechser', 'symbol': '⚅', 'desc': 'Nur Sechser', 'max': 30},
+    {'key': 'Dreierpasch', 'symbol': '3️⃣', 'desc': '3 gleiche', 'max': 30},
+    {'key': 'Viererpasch', 'symbol': '4️⃣', 'desc': '4 gleiche', 'max': 30},
+    {'key': 'Full House', 'symbol': '🏠', 'desc': '3+2 gleiche = 25', 'max': 25},
+    {'key': 'Kl. Straße', 'symbol': '4️⃣📏', 'desc': '4 Straße = 30', 'max': 30},
+    {'key': 'Gr. Straße', 'symbol': '5️⃣📏', 'desc': '5 Straße = 40', 'max': 40},
+    {'key': 'Kniffel', 'symbol': '🎯', 'desc': '5 gleiche = 50', 'max': 50},
+    {'key': 'Chance', 'symbol': '❓', 'desc': 'Freie Wahl', 'max': 30},
+  ];
   
-  String selectedCategory = 'Einser';
+  int selectedIndex = 0;
   late List<TextEditingController> points;
 
   @override
@@ -1311,65 +1323,102 @@ class _KniffelRoundDialogState extends State<KniffelRoundDialog> {
     Navigator.pop(context);
   }
 
-  int getMaxPoints(String category) {
-    switch (category) {
-      case 'Einser': return 5;
-      case 'Zweier': return 10;
-      case 'Dreier': return 15;
-      case 'Vierer': return 20;
-      case 'Fünfer': return 25;
-      case 'Sechser': return 30;
-      case 'Dreierpasch': return 30;
-      case 'Viererpasch': return 30;
-      case 'Full House': return 25;
-      case 'Kl. Straße': return 30;
-      case 'Gr. Straße': return 40;
-      case 'Kniffel': return 50;
-      case 'Chance': return 30;
-      default: return 100;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final selectedCat = categories[selectedIndex];
+    
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 24),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 16),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Kategorie wählen', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            
-            // Category dropdown
-            DropdownButtonFormField<String>(
-              value: selectedCategory,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                labelText: 'Kategorie',
-              ),
-              items: [...upperCategories, ...lowerCategories].map((cat) {
-                return DropdownMenuItem(value: cat, child: Text(cat));
-              }).toList(),
-              onChanged: (val) => setState(() => selectedCategory = val!),
+            Text(
+              'Kategorie wählen',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: widget.themeColor),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             
-            // Info text for category
+            // Visuelles Grid mit Symbolen
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: widget.themeColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
-                _getCategoryInfo(selectedCategory),
-                style: TextStyle(fontSize: 13, color: widget.themeColor),
-                textAlign: TextAlign.center,
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: List.generate(categories.length, (index) {
+                  final cat = categories[index];
+                  final isSelected = index == selectedIndex;
+                  return GestureDetector(
+                    onTap: () => setState(() => selectedIndex = index),
+                    child: Container(
+                      width: 65,
+                      height: 65,
+                      decoration: BoxDecoration(
+                        color: isSelected ? widget.themeColor : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? widget.themeColor : Colors.grey.shade300,
+                          width: isSelected ? 3 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: widget.themeColor.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 3))]
+                            : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            cat['symbol'] as String,
+                            style: TextStyle(fontSize: 28, color: isSelected ? Colors.white : Colors.black87),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
               ),
             ),
             const SizedBox(height: 16),
             
+            // Ausgewählte Kategorie Info
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              decoration: BoxDecoration(
+                color: widget.themeColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: widget.themeColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    selectedCat['symbol'] as String,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    children: [
+                      Text(
+                        selectedCat['key'] as String,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: widget.themeColor),
+                      ),
+                      Text(
+                        '${selectedCat['desc']} (max ${selectedCat['max']})',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Punkte Eingabe für jeden Spieler
             ...List.generate(widget.players.length, (index) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -1377,18 +1426,25 @@ class _KniffelRoundDialogState extends State<KniffelRoundDialog> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: Text(widget.players[index].name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      child: Text(
+                        widget.players[index].name,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      ),
                     ),
                     Expanded(
                       flex: 2,
                       child: TextField(
                         controller: points[index],
                         keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         decoration: InputDecoration(
                           labelText: 'Punkte',
-                          hintText: '0-${getMaxPoints(selectedCategory)}',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          hintText: '0-${selectedCat['max']}',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          fillColor: Colors.white,
+                          filled: true,
                         ),
                       ),
                     ),
@@ -1396,13 +1452,21 @@ class _KniffelRoundDialogState extends State<KniffelRoundDialog> {
                 ),
               );
             }),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _save,
-                style: ElevatedButton.styleFrom(backgroundColor: widget.themeColor, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
-                child: const Text('EINTRAG SPEICHERN', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.themeColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  '💾 EINTRAG SPEICHERN',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -1410,25 +1474,6 @@ class _KniffelRoundDialogState extends State<KniffelRoundDialog> {
         ),
       ),
     );
-  }
-
-  String _getCategoryInfo(String category) {
-    switch (category) {
-      case 'Einser': return 'Nur Einser zählen (max. 5 Punkte)';
-      case 'Zweier': return 'Nur Zweier zählen (max. 10 Punkte)';
-      case 'Dreier': return 'Nur Dreier zählen (max. 15 Punkte)';
-      case 'Vierer': return 'Nur Vierer zählen (max. 20 Punkte)';
-      case 'Fünfer': return 'Nur Fünfer zählen (max. 25 Punkte)';
-      case 'Sechser': return 'Nur Sechser zählen (max. 30 Punkte)';
-      case 'Dreierpasch': return '3 gleiche Würfel - Summe aller Würfel';
-      case 'Viererpasch': return '4 gleiche Würfel - Summe aller Würfel';
-      case 'Full House': return '3 gleiche + 2 gleiche = 25 Punkte';
-      case 'Kl. Straße': return '4 aufeinanderfolgende Zahlen = 30 Punkte';
-      case 'Gr. Straße': return '5 aufeinanderfolgende Zahlen = 40 Punkte';
-      case 'Kniffel': return '5 gleiche Würfel = 50 Punkte';
-      case 'Chance': return 'Summe aller Würfel (freie Wahl)';
-      default: return '';
-    }
   }
 
   @override
