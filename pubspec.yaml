@@ -14,6 +14,7 @@ dependencies:
   path_provider: ^2.0.15
   just_audio: ^0.9.36
   just_audio_background: ^0.0.1-beta.12
+  home_widget: ^0.6.3
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
