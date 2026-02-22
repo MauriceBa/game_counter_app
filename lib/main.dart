@@ -38,7 +38,7 @@ Future<void> main() async {
   );
   
   await initRadioPlayer();
-  await radioPlayer.play();
+  // Radio starts paused - user must press play
   
   runApp(const GameCounterApp());
 }

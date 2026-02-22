@@ -39,7 +39,7 @@ class RadioWidgetProvider : AppWidgetProvider() {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val isPlaying = prefs.getBoolean(PREF_IS_PLAYING, false)
         
-        // Update button icon based on state
+        // Update button icon based on state (Play or Pause)
         val iconRes = if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
         views.setImageViewResource(R.id.widget_play_button, iconRes)
 
@@ -52,17 +52,6 @@ class RadioWidgetProvider : AppWidgetProvider() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         views.setOnClickPendingIntent(R.id.widget_play_button, playPendingIntent)
-
-        // Launch app when clicking title/logo
-        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        val launchPendingIntent = PendingIntent.getActivity(
-            context, 1, launchIntent ?: Intent(),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_title, launchPendingIntent)
-        views.setOnClickPendingIntent(R.id.widget_logo, launchPendingIntent)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
