@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="radio_widget_description">RTignes Radio Widget</string>
+    <string name="radio_widget_description">RTignes Radio 1x1</string>
+    <string name="radio_widget_1x2_left_description">RTignes Radio - Play links, Icon rechts</string>
+    <string name="radio_widget_1x2_right_description">RTignes Radio - Icon links, Play rechts</string>
 </resources>

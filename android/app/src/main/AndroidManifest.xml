@@ -46,7 +46,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Home Screen Widget -->
+        <!-- Home Screen Widget 1x1 -->
         <receiver
             android:name=".RadioWidgetProvider"
             android:exported="true">
@@ -57,6 +57,32 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/radio_widget_info"/>
+        </receiver>
+
+        <!-- Home Screen Widget 1x2 - Play Left, Icon Right -->
+        <receiver
+            android:name=".RadioWidget1x2LeftProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="com.maurice.game_counter_app.RADIO_PLAY_PAUSE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/radio_widget_1x2_left_info"/>
+        </receiver>
+
+        <!-- Home Screen Widget 1x2 - Icon Left, Play Right -->
+        <receiver
+            android:name=".RadioWidget1x2RightProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="com.maurice.game_counter_app.RADIO_PLAY_PAUSE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/radio_widget_1x2_right_info"/>
         </receiver>
 
         <meta-data
