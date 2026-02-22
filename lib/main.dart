@@ -305,6 +305,7 @@ class GameSelectionScreen extends StatelessWidget {
     {'key': 'uno', 'title': 'Uno', 'icon': '🃏', 'color': Colors.green},
     {'key': 'rumikub', 'title': 'Rummikub', 'icon': '🧩', 'color': Colors.blueAccent},
     {'key': 'wizard', 'title': 'Wizard', 'icon': '🧙', 'color': Colors.deepPurpleAccent},
+    {'key': 'kniffel', 'title': 'Kniffel', 'icon': '🎲', 'color': Colors.orange},
   ];
 
   @override
@@ -669,6 +670,19 @@ class _ActiveGameScreenState extends State<ActiveGameScreen> {
                   } else {
                     players[i].score -= (ansage - stiche).abs() * 10;
                   }
+                }
+                currentRound++;
+              });
+            },
+          );
+        } else if (widget.gameType == 'kniffel') {
+          return KniffelRoundDialog(
+            players: players,
+            themeColor: widget.themeColor,
+            onSave: (scores) {
+              setState(() {
+                for (int i = 0; i < players.length; i++) {
+                  players[i].score += scores[i];
                 }
                 currentRound++;
               });
@@ -1255,5 +1269,171 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Map<String, dynamic> _getGameInfo(String key) {
     final games = GameSelectionScreen.games;
     return games.firstWhere((g) => g['key'] == key, orElse: () => {'key': key, 'title': key, 'icon': '🎲', 'color': Colors.grey});
+  }
+}
+
+// ==========================================
+// Dialog: Kniffel
+// ==========================================
+class KniffelRoundDialog extends StatefulWidget {
+  final List<GamePlayer> players;
+  final Color themeColor;
+  final Function(List<int>) onSave;
+
+  const KniffelRoundDialog({super.key, required this.players, required this.themeColor, required this.onSave});
+
+  @override
+  State<KniffelRoundDialog> createState() => _KniffelRoundDialogState();
+}
+
+class _KniffelRoundDialogState extends State<KniffelRoundDialog> {
+  // Upper section categories
+  final List<String> upperCategories = ['Einser', 'Zweier', 'Dreier', 'Vierer', 'Fünfer', 'Sechser'];
+  // Lower section categories  
+  final List<String> lowerCategories = ['Dreierpasch', 'Viererpasch', 'Full House', 'Kl. Straße', 'Gr. Straße', 'Kniffel', 'Chance'];
+  
+  String selectedCategory = 'Einser';
+  late List<TextEditingController> points;
+
+  @override
+  void initState() {
+    super.initState();
+    points = List.generate(widget.players.length, (_) => TextEditingController());
+  }
+
+  void _save() {
+    List<int> results = [];
+    for (int i = 0; i < widget.players.length; i++) {
+      int score = int.tryParse(points[i].text) ?? 0;
+      results.add(score);
+    }
+    widget.onSave(results);
+    Navigator.pop(context);
+  }
+
+  int getMaxPoints(String category) {
+    switch (category) {
+      case 'Einser': return 5;
+      case 'Zweier': return 10;
+      case 'Dreier': return 15;
+      case 'Vierer': return 20;
+      case 'Fünfer': return 25;
+      case 'Sechser': return 30;
+      case 'Dreierpasch': return 30;
+      case 'Viererpasch': return 30;
+      case 'Full House': return 25;
+      case 'Kl. Straße': return 30;
+      case 'Gr. Straße': return 40;
+      case 'Kniffel': return 50;
+      case 'Chance': return 30;
+      default: return 100;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 16, right: 16, top: 24),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Kategorie wählen', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            
+            // Category dropdown
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                labelText: 'Kategorie',
+              ),
+              items: [...upperCategories, ...lowerCategories].map((cat) {
+                return DropdownMenuItem(value: cat, child: Text(cat));
+              }).toList(),
+              onChanged: (val) => setState(() => selectedCategory = val!),
+            ),
+            const SizedBox(height: 8),
+            
+            // Info text for category
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: widget.themeColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _getCategoryInfo(selectedCategory),
+                style: TextStyle(fontSize: 13, color: widget.themeColor),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            ...List.generate(widget.players.length, (index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(widget.players[index].name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: points[index],
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Punkte',
+                          hintText: '0-${getMaxPoints(selectedCategory)}',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _save,
+                style: ElevatedButton.styleFrom(backgroundColor: widget.themeColor, foregroundColor: Colors.white, padding: const EdgeInsets.all(16)),
+                child: const Text('EINTRAG SPEICHERN', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getCategoryInfo(String category) {
+    switch (category) {
+      case 'Einser': return 'Nur Einser zählen (max. 5 Punkte)';
+      case 'Zweier': return 'Nur Zweier zählen (max. 10 Punkte)';
+      case 'Dreier': return 'Nur Dreier zählen (max. 15 Punkte)';
+      case 'Vierer': return 'Nur Vierer zählen (max. 20 Punkte)';
+      case 'Fünfer': return 'Nur Fünfer zählen (max. 25 Punkte)';
+      case 'Sechser': return 'Nur Sechser zählen (max. 30 Punkte)';
+      case 'Dreierpasch': return '3 gleiche Würfel - Summe aller Würfel';
+      case 'Viererpasch': return '4 gleiche Würfel - Summe aller Würfel';
+      case 'Full House': return '3 gleiche + 2 gleiche = 25 Punkte';
+      case 'Kl. Straße': return '4 aufeinanderfolgende Zahlen = 30 Punkte';
+      case 'Gr. Straße': return '5 aufeinanderfolgende Zahlen = 40 Punkte';
+      case 'Kniffel': return '5 gleiche Würfel = 50 Punkte';
+      case 'Chance': return 'Summe aller Würfel (freie Wahl)';
+      default: return '';
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var c in points) { c.dispose(); }
+    super.dispose();
   }
 }
