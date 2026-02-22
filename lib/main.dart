@@ -14,7 +14,7 @@ final ja.AudioPlayer radioPlayer = ja.AudioPlayer();
 Future<void> initRadioPlayer() async {
   try {
     await radioPlayer.setAudioSource(ja.AudioSource.uri(
-      Uri.parse('http://hosting2.studioradiomedia.com:8029/stream.mp3'), // Stream URL for R' Tignes
+      Uri.parse('https://hosting.studioradiomedia.fr:1705/stream'), // Stream URL for R' Tignes
       tag: MediaItem(
         id: 'tignes_live',
         album: 'R\' La Radiostation',
@@ -108,7 +108,7 @@ class GlobalRadioPlayer extends StatelessWidget {
                   BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
                 ],
                 image: const DecorationImage(
-                  image: NetworkImage('https://laradiostation.fr/wp-content/uploads/2021/09/Logo-R-La-Radiostation.png'),
+                  image: AssetImage('icon.png'),
                   fit: BoxFit.contain,
                 )
               ),
